@@ -1,4 +1,4 @@
-package com.example.mysignageapp;
+package com.example.nstimelypray;
 
 import android.Manifest;
 import android.app.ProgressDialog;
