@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private ProgressDialog progressDialog;
 
-    // Internal storage path untuk video/gambar
+    // Folder untuk video/gambar di Android/media
     private File assetsDir;
 
     // Link ZIP video/gambar
@@ -62,11 +62,11 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Folder internal untuk video/gambar
-        assetsDir = new File(getExternalFilesDir(null), "assets");
+        // Folder internal/public di Android/media
+        assetsDir = new File(getExternalMediaDirs()[0], "com.example.nstimelypray/assets");
         if (!assetsDir.exists()) assetsDir.mkdirs();
 
-        // Mulai unduh video/gambar (ZIP)
+        // Mulai unduh & unzip video/gambar (ZIP)
         new DownloadAndUnzipTask().execute(ZIP_URL);
 
         // Load index.html dari APK assets
