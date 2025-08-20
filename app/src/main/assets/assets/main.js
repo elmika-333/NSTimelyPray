@@ -1,3 +1,7 @@
+// ===== PATH ASSETS =====
+const ASSETS_PATH =
+  "file:///sdcard/Android/data/com.example.nstimelypray/files/assets"
+
 /* ======================
 BAGIAN: TANGGAL MASEHI & HIJRIAH
 ====================== */
@@ -366,7 +370,7 @@ const slide2 = document.getElementById("slide2")
 // daftar gambar
 const slideImages = Array.from(
   { length: 12 },
-  (_, i) => `file:///sdcard/nstimelypray/assets/${i + 1}.jpg`
+  (_, i) => `${ASSETS_PATH}/${i + 1}.jpg`
 )
 
 // preload supaya mulus
@@ -512,7 +516,7 @@ function onAdzanStart() {
 
   // buat elemen video
   const video = document.createElement("video")
-  video.src = "file:///sdcard/nstimelypray/assets/1.mp4"
+  video.src = `${ASSETS_PATH}/1.mp4`
   video.autoplay = true
   video.playsInline = true
   video.muted = false // biar suara adzan keluar
