@@ -28,12 +28,10 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private ProgressDialog progressDialog;
-
-    // Folder untuk video/gambar di Android/media
     private File assetsDir;
 
-    // Link ZIP video/gambar Google Drive
-    private final String ZIP_URL = "https://drive.google.com/uc?export=download&id=1VeT2_9HDkTNBV8uLpnV9eLWa7XHO2HJ3";
+    // Link ZIP video/gambar GitHub Releases
+    private final String ZIP_URL = "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,28 +91,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 URL url = new URL(urls[0]);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setInstanceFollowRedirects(true);
                 connection.connect();
-
-                // Cek Google Drive confirm token
-                String confirmToken = null;
-                for (int i = 1; ; i++) {
-                    String header = connection.getHeaderFieldKey(i);
-                    String value = connection.getHeaderField(i);
-                    if ("Set-Cookie".equalsIgnoreCase(header) && value.contains("download_warning")) {
-                        confirmToken = value.split("=")[1].split(";")[0];
-                        break;
-                    }
-                    if (header == null) break;
-                }
-
-                if (confirmToken != null) {
-                    url = new URL(urls[0] + "&confirm=" + confirmToken);
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.connect();
-                }
-
                 int totalSize = connection.getContentLength();
+
                 InputStream input = connection.getInputStream();
                 ZipInputStream zipInput = new ZipInputStream(input);
                 ZipEntry entry;
