@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Jadwal Sholat - Signage</title>
+    <!-- Gunakan viewport standar agar responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="assets/style.css" />
+</head>
+
+<body>
+    <!-- Audio Adzan -->
+    <audio id="adzan-subuh" src="assets/audio/adzan_subuh.mp3" preload="auto"></audio>
+    <audio id="adzan-regular" src="assets/audio/adzan.mp3" preload="auto"></audio>
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+        <!-- Tanggal -->
+        <div class="tgl">
+            <div class="tgl-masehi">-</div>
+            <div class="hijri tgl-hijri">-</div>
+        </div>
+        <!-- Brand -->
+        <div class="brand">
+            <img src="assets/gambar/logo.png" alt="Logo Masjid" />
+            <div class="title">
+                <div class="name">Masjid Al Hidayah</div>
+                <div class="addr">Jalan KH Wahid Hasyim No 1 Kota Malang</div>
+            </div>
+        </div>
+        <!-- Jam Digital -->
+        <div id="clock" class="clock">10:30</div>
+    </header>
+
+    <!-- COUNTDOWN MENUJU SHOLAT BERIKUTNYA -->
+    <div class="countdown" id="countdown-wrap" aria-label="Hitung mundur menuju jadwal sholat berikutnya">
+        <div class="c-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M12 1a11 11 0 1 0 .001 22.001A11 11 0 0 0 12 1zm0 2a9 9 0 1 1 0 18 9 9 0 0 1 0-18zm1 4h-2v6l5 3 1-1.732-4-2.268V7z" />
+            </svg>
+        </div>
+        <div class="c-label" id="c-label">-</div>
+        <div class="c-sep">–</div>
+        <div class="c-time" id="c-time">00:00:00</div>
+    </div>
+
+    <!-- BOX JADWAL SHOLAT -->
+    <section class="row" aria-label="Jadwal Sholat" id="prayer-boxes"></section>
+
+    <!-- RUNNING TEXT -->
+    <div class="rt" aria-label="Running text">
+        <div class="marquee">
+            <span>SELAMAT DATANG DI MASJID AL HIDAYAH – JALAN KH WAHID HASYIM NO 1 MALANG </span>
+            <span>SELAMAT DATANG DI MASJID AL HIDAYAH – JALAN KH WAHID HASYIM NO 1 MALANG </span>
+        </div>
+    </div>
+
+    <!-- POPUP SINKRONISASI -->
+    <div id="sync-overlay" class="overlay hidden">
+        <div class="modal">
+            <h2>Sinkronisasi Jadwal Sholat</h2>
+            <p class="notice">⚠️ Perangkat harus online / terkoneksi internet sekali saja untuk melanjutkan.</p>
+            <div class="progress-bar">
+                <div id="progress-fill"></div>
+            </div>
+            <p id="progress-text">Klik tombol di bawah untuk mulai</p>
+            <button id="start-sync-btn">Mulai Sinkronisasi</button>
+            <button id="retry-btn" class="hidden">Coba Lagi</button>
+        </div>
+    </div>
+
+    <!-- POPUP ADZAN & SLIDESHOW -->
+    <div id="adzan-popup" class="hidden">
+        <div class="slideshow-wrapper">
+            <div class="slideshow-img" id="slide1"></div>
+            <div class="slideshow-img" id="slide2"></div>
+            <div class="slideshow-shade"></div>
+        </div>
+        <div class="topbar">
+            <!-- Tanggal -->
+            <div class="tgl">
+                <div class="tgl-masehi">-</div>
+                <div class="hijri tgl-hijri">-</div>
+            </div>
+            <!-- Brand -->
+            <div class="brand">
+                <img src="assets/gambar/logo.png" alt="Logo Masjid" />
+                <div class="title">
+                    <div class="name">Masjid Al Hidayah</div>
+                    <div class="addr">Jalan KH Wahid Hasyim No 1 Kota Malang</div>
+                </div>
+            </div>
+            <!-- Jam Digital -->
+            <div id="popup-clock" class="clock">00:00</div>
+        </div>
+        <div class="popup-content">
+            <div class="popup-text" id="popup-text">MENJELANG WAKTU SHALAT</div>
+            <div class="popup-timer" id="popup-timer">
+                <div class="c-iconpopup" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 1a11 11 0 1 0 .001 22.001A11 11 0 0 0 12 1zm0 2a9 9 0 1 1 0 18 9 9 0 0 1 0-18zm1 4h-2v6l5 3 1-1.732-4-2.268V7z" />
+                    </svg>
+                </div>
+                <div class="c-label" id="c-labelpopup">-</div>
+                <div class="c-time" id="c-timepopup">00:00:00</div>
+            </div>
+        </div>
+        <!-- RUNNING TEXT -->
+        <div class="rt" aria-label="Running text">
+            <div class="marquee">
+                <span>SELAMAT DATANG DI MASJID AL HIDAYAH – JALAN KH WAHID HASYIM NO 1 MALANG </span>
+                <span>SELAMAT DATANG DI MASJID AL HIDAYAH – JALAN KH WAHID HASYIM NO 1 MALANG </span>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/main.js"></script>
+</body>
+
+</html>
