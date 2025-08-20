@@ -1,6 +1,6 @@
 // ===== PATH ASSETS =====
 const ASSETS_PATH =
-  "file:///sdcard/Android/data/com.example.nstimelypray/files/assets"
+  "file:///storage/emulated/0/Android/media/com.example.nstimelypray/assets"
 
 /* ======================
 BAGIAN: TANGGAL MASEHI & HIJRIAH
