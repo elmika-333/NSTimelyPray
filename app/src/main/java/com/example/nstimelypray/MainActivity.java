@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
     // Folder untuk video/gambar di Android/media
     private File assetsDir;
 
-    // Link ZIP video/gambar
-    private final String ZIP_URL = "https://drive.usercontent.google.com/download?id=1VeT2_9HDkTNBV8uLpnV9eLWa7XHO2HJ3&export=download&authuser=0";
+    // Link ZIP video/gambar Google Drive
+    private final String ZIP_URL = "https://drive.google.com/uc?export=download&id=1VeT2_9HDkTNBV8uLpnV9eLWa7XHO2HJ3";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebChromeClient(new WebChromeClient());
 
         // Folder internal/public di Android/media
-        assetsDir = new File(getExternalMediaDirs()[0], "com.example.nstimelypray/assets");
+        assetsDir = new File(getExternalMediaDirs()[0], "assets");
         if (!assetsDir.exists()) assetsDir.mkdirs();
 
         // Mulai unduh & unzip video/gambar (ZIP)
@@ -93,14 +93,32 @@ public class MainActivity extends AppCompatActivity {
             try {
                 URL url = new URL(urls[0]);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setInstanceFollowRedirects(true);
                 connection.connect();
-                int totalSize = connection.getContentLength();
 
+                // Cek Google Drive confirm token
+                String confirmToken = null;
+                for (int i = 1; ; i++) {
+                    String header = connection.getHeaderFieldKey(i);
+                    String value = connection.getHeaderField(i);
+                    if ("Set-Cookie".equalsIgnoreCase(header) && value.contains("download_warning")) {
+                        confirmToken = value.split("=")[1].split(";")[0];
+                        break;
+                    }
+                    if (header == null) break;
+                }
+
+                if (confirmToken != null) {
+                    url = new URL(urls[0] + "&confirm=" + confirmToken);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.connect();
+                }
+
+                int totalSize = connection.getContentLength();
                 InputStream input = connection.getInputStream();
                 ZipInputStream zipInput = new ZipInputStream(input);
                 ZipEntry entry;
                 int extractedBytes = 0;
-
                 byte[] buffer = new byte[4096];
 
                 while ((entry = zipInput.getNextEntry()) != null) {
