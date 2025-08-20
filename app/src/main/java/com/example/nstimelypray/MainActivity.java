@@ -29,12 +29,11 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private ProgressDialog progressDialog;
 
-    // Internal storage path (no extra permission required)
+    // Internal storage path untuk video/gambar
     private File assetsDir;
 
-    // Ganti dengan link ZIP server yang bisa langsung di-download
+    // Link ZIP video/gambar
     private final String ZIP_URL = "https://drive.usercontent.google.com/download?id=1VeT2_9HDkTNBV8uLpnV9eLWa7XHO2HJ3&export=download&authuser=0";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,26 +62,19 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Internal folder untuk assets
+        // Folder internal untuk video/gambar
         assetsDir = new File(getExternalFilesDir(null), "assets");
         if (!assetsDir.exists()) assetsDir.mkdirs();
 
-        // Check if index.html exists
-        File indexFile = new File(assetsDir, "index.html");
-        if (indexFile.exists()) {
-            loadOfflineHTML();
-        } else {
-            new DownloadAndUnzipTask().execute(ZIP_URL);
-        }
+        // Mulai unduh video/gambar (ZIP)
+        new DownloadAndUnzipTask().execute(ZIP_URL);
+
+        // Load index.html dari APK assets
+        loadOfflineHTML();
     }
 
     private void loadOfflineHTML() {
-        File indexFile = new File(assetsDir, "index.html");
-        if (indexFile.exists()) {
-            webView.loadUrl("file://" + indexFile.getAbsolutePath());
-        } else {
-            Toast.makeText(this, "index.html tidak ditemukan!", Toast.LENGTH_LONG).show();
-        }
+        webView.loadUrl("file:///android_asset/index.html");
     }
 
     private class DownloadAndUnzipTask extends AsyncTask<String, Integer, Boolean> {
@@ -90,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setMessage("Mengunduh & mengekstrak assets...");
+            progressDialog.setMessage("Mengunduh & mengekstrak video/gambar...");
             progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             progressDialog.setCancelable(false);
             progressDialog.show();
@@ -116,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
                     if (entry.isDirectory()) {
                         outFile.mkdirs();
                     } else {
-                        // Pastikan folder induk ada
                         outFile.getParentFile().mkdirs();
                         FileOutputStream fos = new FileOutputStream(outFile);
                         int count;
@@ -148,10 +139,9 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Boolean success) {
             if (progressDialog != null) progressDialog.dismiss();
             if (success) {
-                Toast.makeText(MainActivity.this, "Download & unzip selesai!", Toast.LENGTH_SHORT).show();
-                loadOfflineHTML();
+                Toast.makeText(MainActivity.this, "Video/gambar siap!", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(MainActivity.this, "Gagal download assets.", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Gagal download video/gambar.", Toast.LENGTH_LONG).show();
             }
         }
     }
