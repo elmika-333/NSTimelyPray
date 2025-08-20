@@ -366,7 +366,7 @@ const slide2 = document.getElementById("slide2")
 // daftar gambar
 const slideImages = Array.from(
   { length: 12 },
-  (_, i) => `assets/slideshow/${i + 1}.jpg`
+  (_, i) => `file:///sdcard/nstimelypray/assets/${i + 1}.jpg`
 )
 
 // preload supaya mulus
@@ -512,7 +512,7 @@ function onAdzanStart() {
 
   // buat elemen video
   const video = document.createElement("video")
-  video.src = "assets/video/1.mp4"
+  video.src = "file:///sdcard/nstimelypray/assets/1.mp4"
   video.autoplay = true
   video.playsInline = true
   video.muted = false // biar suara adzan keluar
