@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.nstimelypray">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Izin koneksi internet -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -8,6 +7,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Izin jalan saat boot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="false"
