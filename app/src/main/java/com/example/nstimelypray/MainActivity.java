@@ -5,8 +5,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.View;
-import android.view.animation.LinearInterpolator;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -64,6 +62,9 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setUseWideViewPort(true);
         webSettings.setLoadWithOverviewMode(true);
 
+        // Fix scaling font
+        webSettings.setTextZoom(100);
+
         // Zoom optional
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(false);
@@ -72,13 +73,6 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webSettings.setSafeBrowsingEnabled(true);
         }
-
-        // User-Agent Chrome Desktop (Windows)
-        String desktopUA =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) " +
-            "Chrome/119.0.0.0 Safari/537.36";
-        webSettings.setUserAgentString(desktopUA);
 
         // Untuk TV: pastikan scale 100% (tidak auto zoom)
         webView.setInitialScale(100);
@@ -205,13 +199,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Tombol back → kembali halaman WebView
+    // Tombol remote (Back = soft refresh, Arrow Down = hard refresh)
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK) && webView.canGoBack()) {
-            webView.goBack();
+        // tombol kembali → kalau bisa back di web, mundur. kalau tidak → reload
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (webView.canGoBack()) {
+                webView.goBack();
+            } else {
+                webView.reload(); // soft refresh
+            }
             return true;
         }
+
+        // tombol arah bawah remote → hard refresh (clear cache + reload)
+        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+            webView.clearCache(true);
+            webView.reload();
+            Toast.makeText(this, "Hard refresh!", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
         return super.onKeyDown(keyCode, event);
     }
 }
