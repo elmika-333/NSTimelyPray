@@ -34,8 +34,10 @@ public class MainActivity extends AppCompatActivity {
     private Dialog downloadDialog;
     private ProgressBar progressBar;
     private TextView progressText;
+    private TextView statusText;
 
     private final String ZIP_URL = "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip";
+    private final File COMPLETE_MARKER = new File(getExternalFilesDir(null), "assets/.complete");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
+
+        assetsDir = new File(getExternalMediaDirs()[0], "assets");
+        if (!assetsDir.exists()) assetsDir.mkdirs();
 
         // WebView settings
         WebSettings ws = webView.getSettings();
@@ -60,19 +65,14 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         }
-
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
 
-        assetsDir = new File(getExternalMediaDirs()[0], "assets");
-        if (!assetsDir.exists()) assetsDir.mkdirs();
-
-        // Cek jika folder sudah ada isinya
-        if (assetsDir.listFiles() != null && assetsDir.listFiles().length > 0) {
-            Toast.makeText(this, "Video/gambar sudah ada, langsung load...", Toast.LENGTH_SHORT).show();
+        // Cek marker selesai
+        if (COMPLETE_MARKER.exists()) {
+            Toast.makeText(this, "Video/gambar sudah siap offline.", Toast.LENGTH_SHORT).show();
             loadOfflineHTML();
         } else {
-            // Jika belum ada, mulai download
             showDownloadDialog();
             new DownloadAndUnzipTask().execute(ZIP_URL);
         }
@@ -90,60 +90,61 @@ public class MainActivity extends AppCompatActivity {
 
         progressBar = downloadDialog.findViewById(R.id.progressBar);
         progressText = downloadDialog.findViewById(R.id.progressText);
+        statusText = downloadDialog.findViewById(R.id.statusText);
 
         progressBar.setMax(100);
         progressBar.setProgress(0);
         progressText.setText("0%");
+        statusText.setText("Mengunduh data video/gambar… pastikan koneksi internet stabil");
 
         downloadDialog.show();
     }
 
-    private class DownloadAndUnzipTask extends AsyncTask<String, Integer, Boolean> {
+    private class DownloadAndUnzipTask extends AsyncTask<String, String, Boolean> {
 
         @Override
         protected Boolean doInBackground(String... urls) {
             try {
-                // 1️⃣ Download ZIP
+                // Download ZIP
+                publishProgress("download", "0");
                 URL url = new URL(urls[0]);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
-                int totalSize = connection.getContentLength();
-
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.connect();
+                int totalSize = conn.getContentLength();
                 File zipFile = new File(getCacheDir(), "assets.zip");
-                InputStream input = connection.getInputStream();
+                InputStream input = conn.getInputStream();
                 FileOutputStream fos = new FileOutputStream(zipFile);
 
                 byte[] buffer = new byte[4096];
-                int bytesRead;
+                int read;
                 int downloaded = 0;
+                boolean hasSize = totalSize > 0;
 
-                while ((bytesRead = input.read(buffer)) != -1) {
-                    fos.write(buffer, 0, bytesRead);
-                    downloaded += bytesRead;
-                    if (totalSize > 0) {
-                        int progress = (int)((downloaded / (float) totalSize) * 50); // 0–50% untuk download
-                        publishProgress(progress);
+                while ((read = input.read(buffer)) != -1) {
+                    fos.write(buffer, 0, read);
+                    downloaded += read;
+                    if (hasSize) {
+                        int progress = (int)((downloaded / (float) totalSize) * 50);
+                        publishProgress("download", String.valueOf(progress));
                     }
                 }
                 fos.close();
                 input.close();
 
-                // 2️⃣ Hitung jumlah entry ZIP
+                // Unzip
                 ZipInputStream zipCountStream = new ZipInputStream(new FileInputStream(zipFile));
                 int totalEntries = 0;
                 while (zipCountStream.getNextEntry() != null) totalEntries++;
                 zipCountStream.close();
 
-                // 3️⃣ Ekstrak ZIP
                 ZipInputStream zipInput = new ZipInputStream(new FileInputStream(zipFile));
                 ZipEntry entry;
-                int extractedEntries = 0;
+                int extracted = 0;
 
                 while ((entry = zipInput.getNextEntry()) != null) {
                     File outFile = new File(assetsDir, entry.getName());
-                    if (entry.isDirectory()) {
-                        outFile.mkdirs();
-                    } else {
+                    if (entry.isDirectory()) outFile.mkdirs();
+                    else {
                         outFile.getParentFile().mkdirs();
                         FileOutputStream out = new FileOutputStream(outFile);
                         int count;
@@ -152,15 +153,19 @@ public class MainActivity extends AppCompatActivity {
                     }
                     zipInput.closeEntry();
 
-                    // Update progress unzip 50–100%
-                    extractedEntries++;
-                    int progress = 50 + (int)((extractedEntries / (float) totalEntries) * 50);
-                    publishProgress(progress);
+                    // update progress unzip 50–100%
+                    extracted++;
+                    int progress = 50 + (int)((extracted / (float) totalEntries) * 50);
+                    publishProgress("unzip", String.valueOf(progress));
                 }
                 zipInput.close();
 
-                // Hapus file ZIP sementara
+                // hapus zip sementara
                 zipFile.delete();
+
+                // buat marker selesai
+                File marker = new File(assetsDir, ".complete");
+                marker.createNewFile();
 
                 return true;
             } catch (Exception e) {
@@ -170,11 +175,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            if (progressBar != null && progressText != null) {
-                progressBar.setProgress(values[0]);
-                progressText.setText(values[0] + "%");
+        protected void onProgressUpdate(String... values) {
+            String type = values[0];
+            int progress = Integer.parseInt(values[1]);
+            if (progressBar != null && progressText != null && statusText != null) {
+                progressBar.setProgress(progress);
+                progressText.setText(progress + "%");
+
+                if ("download".equals(type))
+                    statusText.setText("Mengunduh data video/gambar… pastikan koneksi internet stabil");
+                else if ("unzip".equals(type))
+                    statusText.setText("Mengekstrak file… tunggu sebentar");
             }
         }
 
