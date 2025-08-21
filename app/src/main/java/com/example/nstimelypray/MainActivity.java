@@ -1,11 +1,13 @@
 package com.example.nstimelypray;
 
-import android.app.ProgressDialog;
+import android.app.Dialog;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -27,10 +29,11 @@ import java.util.zip.ZipInputStream;
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
-    private ProgressDialog progressDialog;
     private File assetsDir;
+    private Dialog downloadDialog;
+    private ProgressBar progressBar;
+    private TextView progressText;
 
-    // Link ZIP video/gambar GitHub Releases
     private final String ZIP_URL = "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip";
 
     @Override
@@ -60,31 +63,40 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Folder internal/public di Android/media
         assetsDir = new File(getExternalMediaDirs()[0], "assets");
         if (!assetsDir.exists()) assetsDir.mkdirs();
 
-        // Mulai unduh & unzip video/gambar (ZIP)
-        new DownloadAndUnzipTask().execute(ZIP_URL);
-
-        // Load index.html dari APK assets
-        loadOfflineHTML();
+        // Cek jika folder sudah ada isinya
+        if (assetsDir.listFiles() != null && assetsDir.listFiles().length > 0) {
+            Toast.makeText(this, "Video/gambar sudah ada, langsung load...", Toast.LENGTH_SHORT).show();
+            loadOfflineHTML();
+        } else {
+            // Jika belum ada, mulai download
+            showDownloadDialog();
+            new DownloadAndUnzipTask().execute(ZIP_URL);
+        }
     }
 
     private void loadOfflineHTML() {
         webView.loadUrl("file:///android_asset/index.html");
     }
 
+    private void showDownloadDialog() {
+        downloadDialog = new Dialog(this);
+        downloadDialog.setContentView(R.layout.dialog_download);
+        downloadDialog.setCancelable(false);
+        downloadDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+        progressBar = downloadDialog.findViewById(R.id.progressBar);
+        progressText = downloadDialog.findViewById(R.id.progressText);
+
+        progressBar.setMax(100);
+        progressBar.setProgress(0);
+
+        downloadDialog.show();
+    }
+
     private class DownloadAndUnzipTask extends AsyncTask<String, Integer, Boolean> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setMessage("Mengunduh & mengekstrak video/gambar...");
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progressDialog.setCancelable(false);
-            progressDialog.show();
-        }
 
         @Override
         protected Boolean doInBackground(String... urls) {
@@ -129,14 +141,18 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-            if (progressDialog != null) progressDialog.setProgress(values[0]);
+            if (progressBar != null && progressText != null) {
+                progressBar.setProgress(values[0]);
+                progressText.setText("Mengunduh & mengekstrak: " + values[0] + "%");
+            }
         }
 
         @Override
         protected void onPostExecute(Boolean success) {
-            if (progressDialog != null) progressDialog.dismiss();
+            if (downloadDialog != null) downloadDialog.dismiss();
             if (success) {
                 Toast.makeText(MainActivity.this, "Video/gambar siap!", Toast.LENGTH_SHORT).show();
+                loadOfflineHTML();
             } else {
                 Toast.makeText(MainActivity.this, "Gagal download video/gambar.", Toast.LENGTH_LONG).show();
             }
