@@ -117,8 +117,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             isDownloading = true;
-            if (statusText != null) statusText.setText("Mengunduh data video/gambar… pastikan koneksi internet stabil");
-        }
+            if (statusText != null) statusText.setText("uh data video/gambar… pastikan koneksi internet stabil");
+        }Mengund
 
         @Override
         protected Boolean doInBackground(String... urls) {
