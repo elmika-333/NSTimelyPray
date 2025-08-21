@@ -60,14 +60,14 @@ body {
 .tgl {
   display: flex;
   flex-direction: column;
-  line-height: 3rem;
+  line-height: 5vh;
   font-weight: 600;
-  font-size: 2rem;
+  font-size: 1.5vw;
   letter-spacing: 0.5px;
 }
 .tgl .hijri {
   font-weight: 400;
-  font-size: 1.8rem;
+  font-size: 2vw;
   opacity: 0.95;
 }
 
@@ -78,7 +78,7 @@ body {
   gap: 22px;
 }
 .brand img {
-  width: auto;
+  width: 7vw;
 }
 .brand .title {
   display: flex;
@@ -86,22 +86,22 @@ body {
   line-height: 1;
 }
 .brand .title .name {
-  font-size: 75px;
+  font-size: 4vw;
   font-weight: 800;
   letter-spacing: 1px;
 }
 .brand .title .addr {
-  font-size: 28px;
+  font-size: 1.5vw;
   font-weight: 400;
   opacity: 0.95;
-  margin-top: 8px;
+  margin-top: 2%;
   letter-spacing: 1px;
 }
 
 /* Jam Digital */
 .clock {
   font-weight: 800;
-  font-size: 6rem;
+  font-size: 6vw;
   letter-spacing: 1px;
   text-align: right;
 }
