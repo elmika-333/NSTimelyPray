@@ -20,6 +20,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -92,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
         progressBar.setMax(100);
         progressBar.setProgress(0);
+        progressText.setText("0%");
 
         downloadDialog.show();
     }
@@ -101,16 +103,41 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(String... urls) {
             try {
+                // 1️⃣ Download ZIP
                 URL url = new URL(urls[0]);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
                 int totalSize = connection.getContentLength();
 
+                File zipFile = new File(getCacheDir(), "assets.zip");
                 InputStream input = connection.getInputStream();
-                ZipInputStream zipInput = new ZipInputStream(input);
-                ZipEntry entry;
-                int extractedBytes = 0;
+                FileOutputStream fos = new FileOutputStream(zipFile);
+
                 byte[] buffer = new byte[4096];
+                int bytesRead;
+                int downloaded = 0;
+
+                while ((bytesRead = input.read(buffer)) != -1) {
+                    fos.write(buffer, 0, bytesRead);
+                    downloaded += bytesRead;
+                    if (totalSize > 0) {
+                        int progress = (int)((downloaded / (float) totalSize) * 50); // 0–50% untuk download
+                        publishProgress(progress);
+                    }
+                }
+                fos.close();
+                input.close();
+
+                // 2️⃣ Hitung jumlah entry ZIP
+                ZipInputStream zipCountStream = new ZipInputStream(new FileInputStream(zipFile));
+                int totalEntries = 0;
+                while (zipCountStream.getNextEntry() != null) totalEntries++;
+                zipCountStream.close();
+
+                // 3️⃣ Ekstrak ZIP
+                ZipInputStream zipInput = new ZipInputStream(new FileInputStream(zipFile));
+                ZipEntry entry;
+                int extractedEntries = 0;
 
                 while ((entry = zipInput.getNextEntry()) != null) {
                     File outFile = new File(assetsDir, entry.getName());
@@ -118,19 +145,23 @@ public class MainActivity extends AppCompatActivity {
                         outFile.mkdirs();
                     } else {
                         outFile.getParentFile().mkdirs();
-                        FileOutputStream fos = new FileOutputStream(outFile);
+                        FileOutputStream out = new FileOutputStream(outFile);
                         int count;
-                        while ((count = zipInput.read(buffer)) != -1) {
-                            fos.write(buffer, 0, count);
-                            extractedBytes += count;
-                            if (totalSize > 0)
-                                publishProgress((int) ((extractedBytes / (float) totalSize) * 100));
-                        }
-                        fos.close();
+                        while ((count = zipInput.read(buffer)) != -1) out.write(buffer, 0, count);
+                        out.close();
                     }
                     zipInput.closeEntry();
+
+                    // Update progress unzip 50–100%
+                    extractedEntries++;
+                    int progress = 50 + (int)((extractedEntries / (float) totalEntries) * 50);
+                    publishProgress(progress);
                 }
                 zipInput.close();
+
+                // Hapus file ZIP sementara
+                zipFile.delete();
+
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -143,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
             super.onProgressUpdate(values);
             if (progressBar != null && progressText != null) {
                 progressBar.setProgress(values[0]);
-                progressText.setText("Mengunduh & mengekstrak: " + values[0] + "%");
+                progressText.setText(values[0] + "%");
             }
         }
 
