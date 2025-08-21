@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#80000000"> <!-- Semi-transparent black overlay -->
+    android:background="#80000000">
 
     <LinearLayout
         android:layout_width="260dp"
@@ -13,7 +13,6 @@
         android:gravity="center"
         android:layout_gravity="center">
 
-        <!-- Circular ProgressBar dengan glow -->
         <ProgressBar
             android:id="@+id/progressBar"
             style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Horizontal"
@@ -24,7 +23,6 @@
             android:max="100"
             android:progressDrawable="@drawable/circular_progress_glow"/>
 
-        <!-- Persentase progress di tengah -->
         <TextView
             android:id="@+id/progressText"
             android:layout_width="wrap_content"
@@ -34,9 +32,8 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_gravity="center"
-            android:layout_marginTop="-120dp"/> <!-- Di tengah circular bar -->
+            android:layout_marginTop="-120dp"/>
 
-        <!-- Status text -->
         <TextView
             android:id="@+id/statusText"
             android:layout_width="wrap_content"
