@@ -1,6 +1,5 @@
 package com.example.nstimelypray;
 
-import android.animation.ObjectAnimator;
 import android.app.Dialog;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -17,8 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,88 +23,90 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
-    private File assetsDir;
     private Dialog downloadDialog;
     private ProgressBar progressBar;
-    private TextView progressText, statusText;
+    private TextView progressText;
     private boolean isDownloading = false;
-
-    private final String ZIP_URL = "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip";
+    private File assetsDir;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        hideSystemUI();
-
         setContentView(R.layout.activity_main);
-        webView = findViewById(R.id.webview);
 
-        // WebView settings
-        WebSettings ws = webView.getSettings();
-        ws.setJavaScriptEnabled(true);
-        ws.setMediaPlaybackRequiresUserGesture(false);
-        ws.setDomStorageEnabled(true);
-        ws.setLoadWithOverviewMode(true);
-        ws.setUseWideViewPort(true);
-        ws.setTextZoom(100);
-        ws.setSupportZoom(false);
-        ws.setBuiltInZoomControls(false);
-        ws.setAllowFileAccess(true);
-        ws.setAllowContentAccess(true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        }
+        webView = findViewById(R.id.webView);
 
-        webView.setWebViewClient(new WebViewClient());
-        webView.setWebChromeClient(new WebChromeClient());
-
-        assetsDir = new File(getExternalMediaDirs()[0], "assets");
+        // siapkan folder cache
+        assetsDir = new File(getCacheDir(), "nstimely_assets");
         if (!assetsDir.exists()) assetsDir.mkdirs();
 
-        // Cek jika download + unzip sudah selesai
-        if (isAssetsComplete()) {
-            Toast.makeText(this, "Video/gambar sudah ada, langsung load...", Toast.LENGTH_SHORT).show();
-            loadOfflineHTML();
+        // kalau sudah ada .completed → langsung load
+        File completed = new File(assetsDir, ".completed");
+        if (completed.exists()) {
+            loadWebView();
         } else {
             showDownloadDialog();
-            new DownloadAndUnzipTask().execute(ZIP_URL);
+            new DownloadAndUnzipTask().execute("https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip");
         }
     }
 
-    private void loadOfflineHTML() {
+    private void loadWebView() {
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setAllowFileAccess(true);
+
+        // Supaya halaman render seperti di desktop
+        webSettings.setUseWideViewPort(true);
+        webSettings.setLoadWithOverviewMode(true);
+
+        // Zoom optional
+        webSettings.setSupportZoom(true);
+        webSettings.setBuiltInZoomControls(false);
+        webSettings.setDisplayZoomControls(false);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            webSettings.setSafeBrowsingEnabled(true);
+        }
+
+        // User-Agent Chrome Desktop (Windows)
+        String desktopUA =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+            "AppleWebKit/537.36 (KHTML, like Gecko) " +
+            "Chrome/119.0.0.0 Safari/537.36";
+        webSettings.setUserAgentString(desktopUA);
+
+        // Untuk TV: pastikan scale 100% (tidak auto zoom)
+        webView.setInitialScale(100);
+
+        // Supaya JavaScript alert/confirm jalan normal
+        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebViewClient(new WebViewClient());
+
+        // Load index.html bawaan asset
         webView.loadUrl("file:///android_asset/index.html");
     }
 
-    private boolean isAssetsComplete() {
-        // Cek file marker
-        File marker = new File(assetsDir, ".completed");
-        return marker.exists();
-    }
 
     private void showDownloadDialog() {
         downloadDialog = new Dialog(this);
         downloadDialog.setContentView(R.layout.dialog_download);
         downloadDialog.setCancelable(false);
-        downloadDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
         progressBar = downloadDialog.findViewById(R.id.progressBar);
         progressText = downloadDialog.findViewById(R.id.progressText);
-        statusText = downloadDialog.findViewById(R.id.statusText);
 
-        progressBar.setMax(100);
-        progressBar.setProgress(0);
-
-        // Animasi shimmer/glow
-        ObjectAnimator rotation = ObjectAnimator.ofFloat(progressBar, "rotation", 0f, 360f);
-        rotation.setDuration(2000); // 2 detik per putaran
-        rotation.setRepeatCount(ObjectAnimator.INFINITE);
-        rotation.setInterpolator(new LinearInterpolator());
-        rotation.start();
+        if (progressBar != null) {
+            progressBar.setMax(100);
+            progressBar.setProgress(0);
+        }
+        if (progressText != null) {
+            progressText.setText("0%");
+        }
 
         downloadDialog.show();
     }
@@ -117,61 +116,79 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             isDownloading = true;
-            if (statusText != null) statusText.setText("Mengunduh data video/gambar… pastikan koneksi internet stabil");
         }
 
         @Override
         protected Boolean doInBackground(String... urls) {
+            File zipFile = new File(getCacheDir(), "assets.zip");
             try {
+                // === Step 1: Download zip ===
                 URL url = new URL(urls[0]);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
-                int totalSize = connection.getContentLength();
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.connect();
+                int totalSize = conn.getContentLength();
 
-                InputStream input = connection.getInputStream();
-                ZipInputStream zipInput = new ZipInputStream(input);
-                ZipEntry entry;
-                int extractedBytes = 0;
+                InputStream input = conn.getInputStream();
+                FileOutputStream fos = new FileOutputStream(zipFile);
                 byte[] buffer = new byte[4096];
+                int len, downloaded = 0;
 
-                while ((entry = zipInput.getNextEntry()) != null) {
+                while ((len = input.read(buffer)) != -1) {
+                    fos.write(buffer, 0, len);
+                    downloaded += len;
+                    if (totalSize > 0) {
+                        publishProgress((int) ((downloaded / (float) totalSize) * 50)); // 0–50%
+                    }
+                }
+                fos.close();
+                input.close();
+
+                // === Step 2: Unzip (pakai ZipFile) ===
+                java.util.zip.ZipFile zip = new java.util.zip.ZipFile(zipFile);
+                int totalEntries = zip.size();
+                int filesExtracted = 0;
+
+                java.util.Enumeration<? extends ZipEntry> entries = zip.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
                     File outFile = new File(assetsDir, entry.getName());
+
                     if (entry.isDirectory()) {
                         outFile.mkdirs();
                     } else {
                         outFile.getParentFile().mkdirs();
-                        FileOutputStream fos = new FileOutputStream(outFile);
-                        int count;
-                        while ((count = zipInput.read(buffer)) != -1) {
-                            fos.write(buffer, 0, count);
-                            extractedBytes += count;
-                            if (totalSize > 0) {
-                                publishProgress((int) ((extractedBytes / (float) totalSize) * 100));
-                            }
+                        InputStream is = zip.getInputStream(entry);
+                        FileOutputStream out = new FileOutputStream(outFile);
+                        while ((len = is.read(buffer)) != -1) {
+                            out.write(buffer, 0, len);
                         }
-                        fos.close();
+                        out.close();
+                        is.close();
                     }
-                    zipInput.closeEntry();
+
+                    filesExtracted++;
+                    publishProgress(50 + (int) ((filesExtracted / (float) totalEntries) * 50)); // 50–100%
                 }
-                zipInput.close();
+                zip.close();
 
-                // Buat marker file jika sudah selesai
-                File marker = new File(assetsDir, ".completed");
-                marker.createNewFile();
-
+                // tandai selesai
+                new File(assetsDir, ".completed").createNewFile();
                 return true;
+
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
+            } finally {
+                zipFile.delete();
             }
         }
 
+
         @Override
         protected void onProgressUpdate(Integer... values) {
-            if (progressBar != null && progressText != null && statusText != null) {
+            if (progressBar != null && progressText != null) {
                 progressBar.setProgress(values[0]);
                 progressText.setText(values[0] + "%");
-                statusText.setText("Mengunduh & mengekstrak: " + values[0] + "%\nPastikan koneksi internet stabil");
             }
         }
 
@@ -180,39 +197,19 @@ public class MainActivity extends AppCompatActivity {
             isDownloading = false;
             if (downloadDialog != null) downloadDialog.dismiss();
             if (success) {
-                Toast.makeText(MainActivity.this, "Video/gambar siap!", Toast.LENGTH_SHORT).show();
-                loadOfflineHTML();
+                loadWebView();
+                Toast.makeText(MainActivity.this, "Download & ekstrak selesai!", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(MainActivity.this, "Gagal download video/gambar.", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Gagal mengunduh data", Toast.LENGTH_LONG).show();
             }
         }
     }
 
-    private void hideSystemUI() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowInsetsControllerCompat controller =
-                    new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
-            controller.hide(WindowInsetsCompat.Type.statusBars() | WindowInsetsCompat.Type.navigationBars());
-            controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-        } else {
-            View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_IMMERSIVE
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        }
-    }
-
-    @Override
-    public void onBackPressed() { }
-
+    // Tombol back → kembali halaman WebView
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_F5 || keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_BACK) {
-            webView.reload();
+        if ((keyCode == KeyEvent.KEYCODE_BACK) && webView.canGoBack()) {
+            webView.goBack();
             return true;
         }
         return super.onKeyDown(keyCode, event);
