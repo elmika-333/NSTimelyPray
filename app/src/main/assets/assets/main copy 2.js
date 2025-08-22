@@ -71,11 +71,8 @@ function loadSettingsToPopup() {
   toggleAdzanBtn.classList.toggle("active", !!settings.playAdzan)
   toggleIqomahBtn.classList.toggle("active", !!settings.playIqomah)
 
-  // 🟢 konversi dari detik ke menit
-  preAdzanInput.value =
-    settings.preAdzanSec > 0 ? settings.preAdzanSec / 60 : ""
-  iqomahDelayInput.value =
-    settings.iqomahDelaySec > 0 ? settings.iqomahDelaySec / 60 : ""
+  preAdzanInput.value = settings.preAdzanSec
+  iqomahDelayInput.value = settings.iqomahDelaySec
 }
 
 // ===== Event buka popup =====
@@ -114,19 +111,8 @@ saveBtn.addEventListener("click", () => {
     showIqomah: toggleShowIqomah.classList.contains("active"),
     playAdzan: toggleAdzanBtn.classList.contains("active"),
     playIqomah: toggleIqomahBtn.classList.contains("active"),
-
-    // 🟢 konversi menit → detik
-    preAdzanSec: Number(preAdzanInput.value) * 60,
-    iqomahDelaySec: Number(iqomahDelayInput.value) * 60,
-  }
-
-  // === Validasi: Iqomah butuh Adzan aktif ===
-  if (newSettings.showIqomah && !newSettings.showPreAdzan) {
-    showToast(
-      "Aktifkan Waktu Hitung Mundur Sebelum Adzan terlebih dahulu sebelum mengaktifkan Iqomah!",
-      "error"
-    )
-    return // batalkan simpan
+    preAdzanSec: Number(preAdzanInput.value),
+    iqomahDelaySec: Number(iqomahDelayInput.value),
   }
 
   if (!newSettings.showPreAdzan) {
@@ -140,8 +126,6 @@ saveBtn.addEventListener("click", () => {
 
   localStorage.setItem("adzanSettings", JSON.stringify(newSettings))
   settingsPopup.classList.add("hidden")
-
-  showToast("Pengaturan berhasil disimpan!", "success")
 })
 
 // ===== Tutup popup tanpa simpan =====
@@ -344,7 +328,7 @@ function renderTodaySchedule() {
     { name: "Subuh", time: daily.subuh },
     { name: "Syuruk", time: daily.terbit },
     { name: "Dzuhur", time: daily.dzuhur },
-    { name: "Ashar", time: "16:42" },
+    { name: "Ashar", time: "14:50" },
     { name: "Maghrib", time: daily.maghrib },
     { name: "Isya", time: daily.isya },
   ]
@@ -490,14 +474,11 @@ function formatTime(sec) {
 // ====================== Integrasi countdown & popup ======================
 setInterval(() => {
   if (!schedule.length) return
-  if (isInIqomah) return // 🚫 jangan ganggu countdown iqomah
-
   const settings = loadSettings()
   if (!settings.showPreAdzan) {
     if (isPopupVisible) stopSlideshow(false)
     return
   }
-
   const now = new Date()
   let nearest = null
   for (const item of schedule) {
@@ -529,7 +510,6 @@ setInterval(() => {
 // ====================== ADZAN VIDEO & AUDIO ======================
 const adzanSubuh = document.getElementById("adzan-subuh")
 const adzanRegular = document.getElementById("adzan-regular")
-let videoAdzan = null
 
 function onAdzanStart() {
   const settings = loadSettings()
@@ -551,16 +531,16 @@ function onAdzanStart() {
   slide2.style.backgroundImage = "none"
 
   // buat elemen video
-  videoAdzan = document.createElement("video")
-  videoAdzan.src = "assets/video/1.mp4"
-  videoAdzan.autoplay = true
-  videoAdzan.loop = true
-  videoAdzan.playsInline = true
-  videoAdzan.controls = false
-  videoAdzan.muted = false
-  videoAdzan.className = "adzan-video"
+  const video = document.createElement("video")
+  video.src = "assets/video/1.mp4"
+  video.autoplay = true
+  video.loop = true
+  video.playsInline = true
+  video.controls = false
+  video.muted = false // video tetap ada suara ambience, audio adzan mp3 yg di-mute/unmute
+  video.className = "adzan-video"
 
-  Object.assign(videoAdzan.style, {
+  Object.assign(video.style, {
     width: "100%",
     height: "100%",
     objectFit: "cover",
@@ -571,12 +551,12 @@ function onAdzanStart() {
     zIndex: "0",
   })
 
-  slide1.appendChild(videoAdzan)
+  slide1.appendChild(video)
   slide1.style.opacity = "1"
   slide1.classList.add("active")
   slide2.classList.remove("active")
 
-  videoAdzan.play().catch((err) => console.warn("Video autoplay blocked:", err))
+  video.play().catch((err) => console.warn("Video autoplay blocked:", err))
 
   // teks popup
   popupText.textContent = "HARAP TENANG KETIKA ADZAN BERKUMANDANG"
@@ -604,16 +584,9 @@ function onAdzanStart() {
 }
 
 function onAdzanEnd() {
-  // Hentikan slideshow & tutup popup fase adzan
   stopSlideshow(false)
   popup.classList.add("hidden")
   isPopupVisible = false
-
-  // Cek setting wajib: showPreAdzan & showIqomah harus true
-  const settings = loadSettings()
-  if (settings.showPreAdzan && settings.showIqomah) {
-    startIqomah() // lanjut ke fase iqomah
-  }
 }
 
 adzanSubuh.addEventListener("play", onAdzanStart)
@@ -652,144 +625,3 @@ function checkAndPlayAdzan() {
   })
 }
 setInterval(checkAndPlayAdzan, 1000)
-
-// === Bagian IQOMAH ===
-let iqomahIntervalId = null
-let iqomahAudio = null
-let isInIqomah = false
-
-function startIqomah() {
-  const { showIqomah, playIqomah, iqomahDelaySec } = loadSettings()
-  if (!showIqomah) return
-
-  isInIqomah = true
-
-  if (iqomahIntervalId) clearInterval(iqomahIntervalId)
-  if (iqomahAudio) {
-    try {
-      iqomahAudio.pause()
-    } catch (_) {}
-    iqomahAudio = null
-  }
-
-  // 🔥 pastikan slideshow aktif lagi setelah video adzan
-  if (videoAdzan) {
-    videoAdzan.pause()
-    videoAdzan.remove()
-    videoAdzan = null
-  }
-  startSlideshow()
-
-  // Popup countdown iqomah
-  popup.classList.remove("hidden")
-  isPopupVisible = true
-  popupText.textContent = "WAKTU IQOMAH SEGERA TIBA"
-  popupLabel.textContent = ""
-
-  Object.assign(popupText.style, {
-    height: "20vh",
-    fontSize: "2.5vw",
-    fontWeight: "700",
-    marginBottom: "-3%",
-    animation: "slideUp 0.8s ease both",
-    animationDelay: "0s",
-    letterSpacing: "4px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#ffffff",
-    textAlign: "center",
-    backgroundColor: "unset",
-    border: "unset",
-  })
-
-  // styling khusus box timer iqomah
-  boxTimer.style.display = "flex"
-  Object.assign(boxTimer.style, {
-    backgroundColor: "#e57b1c",
-    height: "11vh",
-    fontWeight: "600",
-    fontSize: "5vw",
-    color: "#ffffff",
-    animation: "slideDown 0.8s ease both",
-    animationDelay: "0.2s",
-    borderRadius: "1vw",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: "0%",
-    width: "30vw",
-    margin: "0 auto",
-  })
-
-  let remaining = Number(iqomahDelaySec) || 0
-  popupTimer.textContent = formatTime(remaining)
-
-  iqomahIntervalId = setInterval(() => {
-    remaining = Math.max(remaining - 1, 0)
-
-    if (remaining > 0) {
-      popupTimer.textContent = formatTime(remaining)
-      if (popupTimer.textContent === "00:01") {
-        boxTimer.style.display = "none"
-        popupText.style.display = "none"
-      }
-      return
-    }
-
-    clearInterval(iqomahIntervalId)
-    iqomahIntervalId = null
-
-    // Countdown habis → stop slideshow & ganti iqomah.jpg
-    stopSlideshow(true)
-    slide1.innerHTML = ""
-    slide2.innerHTML = ""
-    slide1.style.backgroundImage = "url('assets/gambar/iqomah.jpg')"
-    slide2.style.backgroundImage = "none"
-    slide1.classList.add("active")
-    slide2.classList.remove("active")
-
-    popupText.style.display = "flex"
-    boxTimer.style.display = "none"
-
-    // teks popup
-    popupText.textContent = "WAKTUNYA MENUNAIKAN SHALAT BERJAMAAH"
-    popupTimer.textContent = ""
-    Object.assign(popupText.style, {
-      backgroundColor: "rgba(0, 16, 28, 0.37)",
-      borderRadius: "2vw",
-      height: "20vh",
-      fontSize: "2.5vw",
-      fontWeight: "700",
-      marginBottom: "5%",
-      animation: "slideUp 0.8s ease both",
-      letterSpacing: "4px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "#ffffff",
-      textAlign: "center",
-      border: "0.2vw solid #fffdfd",
-    })
-
-    iqomahAudio = new Audio("assets/audio/iqomah.mp3")
-    iqomahAudio.muted = !playIqomah
-    iqomahAudio.play().catch(() => {})
-
-    iqomahAudio.onended = () => {
-      popup.classList.add("hidden")
-      isPopupVisible = false
-      isInIqomah = false
-    }
-  }, 1000)
-}
-
-function showToast(message, type = "error") {
-  const toast = document.getElementById("toast")
-  toast.textContent = message
-  toast.style.backgroundColor = type === "error" ? "#dc3545" : "#28a745" // merah / hijau
-  toast.classList.add("show")
-
-  setTimeout(() => {
-    toast.classList.remove("show")
-  }, 5000)
-}

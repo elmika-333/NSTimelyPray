@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <title>Jadwal Sholat - Signage</title>
     <!-- Gunakan viewport standar agar responsive -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" type="text/css" href="assets/style.css" />
 </head>
 
@@ -52,8 +52,8 @@
     <!-- RUNNING TEXT -->
     <div class="rt" aria-label="Running text">
         <div class="marquee">
-            <span>SELAMAT DATANG DI MASJID AL HIDAYAH – JALAN KH WAHID HASYIM NO 1 MALANG </span>
-            <span>SELAMAT DATANG DI MASJID AL HIDAYAH – JALAN KH WAHID HASYIM NO 1 MALANG </span>
+            <span>SELAMAT DATANG DI MASJID AL HIDAYAH – JALAN KH WAHID HASYIM NO 1 MALANG</span>
+            <span>SELAMAT DATANG DI MASJID AL HIDAYAH – JALAN KH WAHID HASYIM NO 1 MALANG</span>
         </div>
     </div>
 
@@ -116,6 +116,51 @@
             </div>
         </div>
     </div>
+
+    <!-- POPUP SETTING ADZAN & IQOMAH -->
+    <div id="settings-popup" class="settings-overlay hidden">
+        <div class="settings-modal">
+            <h2>PENGATURAN ADZAN DAN IQOMAH</h2>
+
+            <!-- Toggle utama Pre-Adzan -->
+            <div class="setting-row">
+                <label class="bold">Tampilkan Waktu Hitung Mundur sebelum Adzan</label>
+                <button id="toggle-show-pre-adzan" class="toggle-btn"></button>
+            </div>
+            <!-- Detail Pre-Adzan -->
+            <div class="setting-row hidden" id="pre-adzan-settings">
+                <label>- Nyalakan Suara Adzan</label>
+                <button id="toggle-adzan" class="toggle-btn"></button>
+            </div>
+            <div class="setting-row hidden" id="pre-adzan-time">
+                <label>- Durasi Hitung Mundur sebelum Adzan (menit)</label>
+                <input type="number" id="pre-adzan-sec" min="0" placeholder="60" />
+            </div>
+            <!-- Toggle utama Iqomah -->
+            <div class="setting-row">
+                <label class="bold">Tampilkan Waktu Hitung Mundur sebelum Iqomah</label>
+                <button id="toggle-show-iqomah" class="toggle-btn"></button>
+            </div>
+            <!-- Detail Iqomah -->
+            <div class="setting-row hidden" id="iqomah-settings">
+                <label>- Nyalakan Suara Iqomah</label>
+                <button id="toggle-iqomah" class="toggle-btn"></button>
+            </div>
+            <div class="setting-row hidden" id="iqomah-time">
+                <label>- Durasi Hitung Mundur Iqomah (menit)</label>
+                <input type="number" id="iqomah-delay-sec" min="0" placeholder="30" />
+            </div>
+
+            <!-- Tombol aksi -->
+            <div class="btn-row">
+                <button id="save-settings" class="btn primary">Simpan</button>
+                <button id="close-settings" class="btn secondary">Keluar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast" class="toast hidden"></div>
 
     <script src="assets/main.js"></script>
 </body>
