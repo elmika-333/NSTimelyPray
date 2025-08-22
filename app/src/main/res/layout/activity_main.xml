@@ -13,9 +13,9 @@
         
     <ImageView
         android:id="@+id/cursorOverlay"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:src="@drawable/ic_cursor"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:background="@android:color/holo_red_light"
         android:visibility="visible"
         android:elevation="10dp"/>
 
