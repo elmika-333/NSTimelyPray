@@ -5,13 +5,12 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,21 +33,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean isDownloading = false;
     private File assetsDir;
 
-    // Cursor variables
-    private float cursorX = 500;
-    private float cursorY = 300;
-    private long lastClickTime = 0;
-    private final int DOUBLE_CLICK_DELAY = 300; // ms
-    private ImageView cursorOverlay;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         webView = findViewById(R.id.webView);
-        cursorOverlay = findViewById(R.id.cursorOverlay);
-        cursorOverlay.setVisibility(View.VISIBLE);
 
         // siapkan folder cache
         assetsDir = new File(getCacheDir(), "nstimely_assets");
@@ -62,9 +52,6 @@ public class MainActivity extends AppCompatActivity {
             showDownloadDialog();
             new DownloadAndUnzipTask().execute("https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip");
         }
-
-        // set cursor awal posisi overlay
-        updateCursorOverlay();
     }
 
     private void loadWebView() {
@@ -72,20 +59,38 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setAllowFileAccess(true);
+
+        // Supaya halaman render seperti di desktop
         webSettings.setUseWideViewPort(true);
         webSettings.setLoadWithOverviewMode(true);
-        webSettings.setTextZoom(100);
+
+        // Zoom optional
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(false);
         webSettings.setDisplayZoomControls(false);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             webSettings.setSafeBrowsingEnabled(true);
         }
+
+        // User-Agent Chrome Desktop (Windows)
+        String desktopUA =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+            "AppleWebKit/537.36 (KHTML, like Gecko) " +
+            "Chrome/119.0.0.0 Safari/537.36";
+        webSettings.setUserAgentString(desktopUA);
+
+        // Untuk TV: pastikan scale 100% (tidak auto zoom)
         webView.setInitialScale(100);
+
+        // Supaya JavaScript alert/confirm jalan normal
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient());
+
+        // Load index.html bawaan asset
         webView.loadUrl("file:///android_asset/index.html");
     }
+
 
     private void showDownloadDialog() {
         downloadDialog = new Dialog(this);
@@ -117,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
         protected Boolean doInBackground(String... urls) {
             File zipFile = new File(getCacheDir(), "assets.zip");
             try {
+                // === Step 1: Download zip ===
                 URL url = new URL(urls[0]);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
@@ -137,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
                 fos.close();
                 input.close();
 
+                // === Step 2: Unzip (pakai ZipFile) ===
                 java.util.zip.ZipFile zip = new java.util.zip.ZipFile(zipFile);
                 int totalEntries = zip.size();
                 int filesExtracted = 0;
@@ -164,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 zip.close();
 
+                // tandai selesai
                 new File(assetsDir, ".completed").createNewFile();
                 return true;
 
@@ -174,6 +182,7 @@ public class MainActivity extends AppCompatActivity {
                 zipFile.delete();
             }
         }
+
 
         @Override
         protected void onProgressUpdate(Integer... values) {
@@ -196,63 +205,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Tombol remote + cursor
+    // Tombol back → kembali halaman WebView
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        int moveStep = 30;
-
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_DPAD_UP:
-                cursorY -= moveStep;
-                break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                cursorY += moveStep;
-                break;
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                cursorX -= moveStep;
-                break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                cursorX += moveStep;
-                break;
-            case KeyEvent.KEYCODE_DPAD_CENTER:
-            case KeyEvent.KEYCODE_ENTER:
-                handleClick();
-                return true;
-            case KeyEvent.KEYCODE_BACK:
-                if (webView.canGoBack()) webView.goBack();
-                else webView.reload();
-                return true;
+        if ((keyCode == KeyEvent.KEYCODE_BACK) && webView.canGoBack()) {
+            webView.goBack();
+            return true;
         }
-
-        // Update overlay posisi cursor
-        updateCursorOverlay();
-
         return super.onKeyDown(keyCode, event);
-    }
-
-    private void updateCursorOverlay() {
-        cursorOverlay.setX(cursorX);
-        cursorOverlay.setY(cursorY);
-    }
-
-    private void handleClick() {
-        long now = System.currentTimeMillis();
-
-        if (now - lastClickTime < DOUBLE_CLICK_DELAY) {
-            simulateClick(cursorX, cursorY); // klik pertama
-            simulateClick(cursorX, cursorY); // klik kedua → double click
-            lastClickTime = 0;
-        } else {
-            simulateClick(cursorX, cursorY);
-            lastClickTime = now;
-        }
-    }
-
-    private void simulateClick(float x, float y) {
-        long now = System.currentTimeMillis();
-        MotionEvent down = MotionEvent.obtain(now, now, MotionEvent.ACTION_DOWN, x, y, 0);
-        MotionEvent up = MotionEvent.obtain(now, now, MotionEvent.ACTION_UP, x, y, 0);
-        webView.dispatchTouchEvent(down);
-        webView.dispatchTouchEvent(up);
     }
 }
