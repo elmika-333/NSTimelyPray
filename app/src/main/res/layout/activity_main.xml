@@ -7,16 +7,49 @@
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="none" />
+        android:layout_height="match_parent" />
 
-        
-    <ImageView
-        android:id="@+id/cursorOverlay"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:background="@android:color/holo_red_light"
-        android:visibility="visible"
-        android:elevation="10dp"/>
+    <!-- Progress Bar modern -->
+    <LinearLayout
+        android:id="@+id/progressLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_centerInParent="true"
+        android:padding="20dp"
+        android:background="@android:color/transparent">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="12dp"
+            android:progress="0"
+            android:max="100"
+            android:progressDrawable="@android:drawable/progress_horizontal"
+            android:indeterminate="false" />
+
+        <TextView
+            android:id="@+id/percentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0%"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:layout_marginTop="10dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/infoText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Device harus terkoneksi internet dan pastikan stabil untuk mengunduh data"
+            android:textColor="#AAAAAA"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:layout_marginTop="6dp"
+            android:padding="5dp" />
+    </LinearLayout>
 
 </RelativeLayout>
