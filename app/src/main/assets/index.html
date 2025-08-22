@@ -15,7 +15,7 @@
     <audio id="adzan-regular" src="assets/audio/adzan.mp3" preload="auto"></audio>
 
     <!-- TOP BAR -->
-    <header class="topbar">
+    <header class="topbar" tabindex="0">
         <!-- Tanggal -->
         <div class="tgl">
             <div class="tgl-masehi">-</div>
@@ -153,14 +153,22 @@
 
             <!-- Tombol aksi -->
             <div class="btn-row">
-                <button id="save-settings" class="btn primary">Simpan</button>
-                <button id="close-settings" class="btn secondary">Keluar</button>
+                <button id="save-settings" class="btn primary" tabindex="0">Simpan</button>
+                <button id="close-settings" class="btn secondary" tabindex="0">Keluar</button>
             </div>
         </div>
     </div>
 
     <!-- Toast Container -->
     <div id="toast" class="toast hidden"></div>
+
+    <style>
+        :focus {
+            outline: 3px solid #ffcc00;
+            /* contoh highlight */
+            outline-offset: 2px;
+        }
+    </style>
 
     <script src="assets/main.js"></script>
 </body>
