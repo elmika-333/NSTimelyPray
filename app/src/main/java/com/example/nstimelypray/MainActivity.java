@@ -1,6 +1,5 @@
 package com.example.nstimelypray;
 
-import android.app.ProgressDialog;
 import android.app.Dialog;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -12,6 +11,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,6 +31,11 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private File assetsDir;
 
+    private Dialog downloadDialog;
+    private ProgressBar progressBar;
+    private TextView progressText;
+    private TextView statusText;
+
     // Link ZIP video/gambar GitHub Releases
     private final String ZIP_URL = "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip";
 
@@ -42,9 +47,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
 
-        // WebView harus bisa fokus agar keydown remote masuk
-        webView.setFocusable(true);
-        webView.setFocusableInTouchMode(true);
+        // WebView harus bisa fokus agar keydown remote masuk 
+        webView.setFocusable(true); 
+        webView.setFocusableInTouchMode(true); 
         webView.requestFocus();
 
         // WebView settings
@@ -70,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
         assetsDir = new File(getExternalMediaDirs()[0], "assets");
         if (!assetsDir.exists()) assetsDir.mkdirs();
 
+        // Siapkan custom dialog download
+        setupDownloadDialog();
+
         // Mulai unduh & unzip video/gambar (ZIP)
         new DownloadAndUnzipTask().execute(ZIP_URL);
 
@@ -77,25 +85,27 @@ public class MainActivity extends AppCompatActivity {
         loadOfflineHTML();
     }
 
+    private void setupDownloadDialog() {
+        downloadDialog = new Dialog(this);
+        downloadDialog.setContentView(R.layout.dialog_download);
+        downloadDialog.setCancelable(false);
+
+        progressBar = downloadDialog.findViewById(R.id.progressBar);
+        progressText = downloadDialog.findViewById(R.id.progressText);
+        statusText = downloadDialog.findViewById(R.id.statusText);
+    }
+
     private void loadOfflineHTML() {
         webView.loadUrl("file:///android_asset/index.html");
     }
 
     private class DownloadAndUnzipTask extends AsyncTask<String, Integer, Boolean> {
-
-        private Dialog downloadDialog;
-        private ProgressBar progressBar;
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-
-            // Buat custom dialog
-            downloadDialog = new Dialog(MainActivity.this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-            downloadDialog.setContentView(R.layout.dialog_download);
-            downloadDialog.setCancelable(false);
-
-            progressBar = downloadDialog.findViewById(R.id.progress_bar);
+            statusText.setText("Mengunduh & mengekstrak video/gambar...");
+            progressBar.setProgress(0);
+            progressText.setText("0%");
             downloadDialog.show();
         }
 
@@ -142,14 +152,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-            if (progressBar != null) progressBar.setProgress(values[0]);
+            int progress = values[0];
+            progressBar.setProgress(progress);
+            progressText.setText(progress + "%");
         }
 
         @Override
         protected void onPostExecute(Boolean success) {
-            if (downloadDialog != null && downloadDialog.isShowing()) {
-                downloadDialog.dismiss();
-            }
+            downloadDialog.dismiss();
             if (success) {
                 Toast.makeText(MainActivity.this, "Video/gambar siap!", Toast.LENGTH_SHORT).show();
             } else {
@@ -181,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_F5 || keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_BACK) {
+        if (keyCode == KeyEvent.KEYCODE_F5 || keyCode == KeyEvent.KEYCODE_MENU) {
             webView.reload();
             return true;
         }
