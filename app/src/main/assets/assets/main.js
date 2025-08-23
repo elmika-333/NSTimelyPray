@@ -380,7 +380,7 @@ function renderTodaySchedule() {
     { name: "Subuh", time: daily.subuh },
     { name: "Syuruk", time: daily.terbit },
     { name: "Dzuhur", time: daily.dzuhur },
-    { name: "Ashar", time: "15:10" },
+    { name: "Ashar", time: daily.ashar },
     { name: "Maghrib", time: daily.maghrib },
     { name: "Isya", time: daily.isya },
   ]
@@ -855,4 +855,5 @@ inputs.forEach((input) => {
     }
   })
 })
+
 
