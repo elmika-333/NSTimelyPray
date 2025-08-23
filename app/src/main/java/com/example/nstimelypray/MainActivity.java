@@ -41,6 +41,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
 
+        // WebView harus bisa fokus agar keydown remote masuk
+        webView.setFocusable(true);
+        webView.setFocusableInTouchMode(true);
+        webView.requestFocus();
+
         // WebView settings
         WebSettings ws = webView.getSettings();
         ws.setJavaScriptEnabled(true);
