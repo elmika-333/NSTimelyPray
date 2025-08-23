@@ -10,12 +10,13 @@
 </head>
 
 <body>
+
     <!-- Audio Adzan -->
     <audio id="adzan-subuh" src="assets/audio/adzan_subuh.mp3" preload="auto"></audio>
     <audio id="adzan-regular" src="assets/audio/adzan.mp3" preload="auto"></audio>
 
     <!-- TOP BAR -->
-    <header class="topbar" tabindex="0">
+    <header class="topbar" role="button" tabindex="0">
         <!-- Tanggal -->
         <div class="tgl">
             <div class="tgl-masehi">-</div>
@@ -134,7 +135,7 @@
             </div>
             <div class="setting-row hidden" id="pre-adzan-time">
                 <label>- Durasi Hitung Mundur sebelum Adzan (menit)</label>
-                <input type="number" id="pre-adzan-sec" min="0" placeholder="60" />
+                <input type="number" id="pre-adzan-sec" min="0" placeholder="60" tabindex="0" />
             </div>
             <!-- Toggle utama Iqomah -->
             <div class="setting-row">
@@ -148,7 +149,7 @@
             </div>
             <div class="setting-row hidden" id="iqomah-time">
                 <label>- Durasi Hitung Mundur Iqomah (menit)</label>
-                <input type="number" id="iqomah-delay-sec" min="0" placeholder="30" />
+                <input type="number" id="iqomah-delay-sec" min="0" placeholder="30" tabindex="0" />
             </div>
 
             <!-- Tombol aksi -->
