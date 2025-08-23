@@ -29,7 +29,6 @@ import java.util.zip.ZipInputStream;
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
-    private ProgressDialog progressDialog;
     private File assetsDir;
 
     // Link ZIP video/gambar GitHub Releases
@@ -92,15 +91,9 @@ public class MainActivity extends AppCompatActivity {
             super.onPreExecute();
 
             // Buat custom dialog
-            downloadDialog = new Dialog(MainActivity.this);
+            downloadDialog = new Dialog(MainActivity.this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             downloadDialog.setContentView(R.layout.dialog_download);
             downloadDialog.setCancelable(false);
-
-            // Set background sekeliling gelap
-            if (downloadDialog.getWindow() != null) {
-                downloadDialog.getWindow().setBackgroundDrawableResource(android.R.color.black);
-                downloadDialog.getWindow().setDimAmount(0.8f); // semi-transparent
-            }
 
             progressBar = downloadDialog.findViewById(R.id.progress_bar);
             downloadDialog.show();
