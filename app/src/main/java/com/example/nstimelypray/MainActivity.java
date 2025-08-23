@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -64,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         // ===== buat cursor overlay =====
         cursor = new ImageView(this);
-        cursor.setImageResource(R.drawable.ic_cursor); // icon cursor
+        cursor.setImageResource(R.drawable.ic_cursor); // icon cursor PNG
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -73,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         cursor.setX(cursorPos.x);
         cursor.setY(cursorPos.y);
         rootLayout.addView(cursor);
+        cursor.bringToFront(); // ⬅️ pastikan di atas WebView
 
         // Setup hide cursor runnable
         hideCursorRunnable = () -> {
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             showDownloadDialog();
             new DownloadAndUnzipTask().execute(
-                "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip"
+                    "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip"
             );
         }
     }
@@ -113,9 +113,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String desktopUA =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) " +
-            "Chrome/119.0.0.0 Safari/537.36";
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                        "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                        "Chrome/119.0.0.0 Safari/537.36";
         webSettings.setUserAgentString(desktopUA);
 
         webView.setInitialScale(100);
@@ -274,7 +274,8 @@ public class MainActivity extends AppCompatActivity {
 
             cursor.setX(cursorPos.x);
             cursor.setY(cursorPos.y);
-            cursor.setVisibility(View.VISIBLE);
+            cursor.setVisibility(ImageView.VISIBLE);
+            cursor.bringToFront(); // ⬅️ supaya tidak ketutupan WebView
             resetCursorHideTimer();
             return true; // <- biar tidak tembus ke WebView
         }
@@ -285,10 +286,12 @@ public class MainActivity extends AppCompatActivity {
     // ===== Klik + double-click =====
     private void handleClick() {
         long now = SystemClock.uptimeMillis();
-        if (now - lastClickTime <= DOUBLE_CLICK_THRESHOLD) {
+        if (now - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
+            // Double click → kirim 2x event dengan jeda
             performClickAtCursor();
-            performClickAtCursor();
+            cursorHandler.postDelayed(this::performClickAtCursor, 120);
         } else {
+            // Single click
             performClickAtCursor();
         }
         lastClickTime = now;
@@ -299,16 +302,30 @@ public class MainActivity extends AppCompatActivity {
         float y = cursorPos.y + cursor.getHeight() / 2f;
 
         long downTime = SystemClock.uptimeMillis();
-        MotionEvent motionEventDown = MotionEvent.obtain(downTime, downTime,
-                MotionEvent.ACTION_DOWN, x, y, 0);
-        MotionEvent motionEventUp = MotionEvent.obtain(downTime, downTime + 100,
-                MotionEvent.ACTION_UP, x, y, 0);
+        // ACTION_DOWN
+        MotionEvent down = MotionEvent.obtain(
+                downTime,
+                downTime,
+                MotionEvent.ACTION_DOWN,
+                x,
+                y,
+                0
+        );
+        // ACTION_UP (beri delay 50ms)
+        MotionEvent up = MotionEvent.obtain(
+                downTime,
+                downTime + 50,
+                MotionEvent.ACTION_UP,
+                x,
+                y,
+                0
+        );
 
-        webView.dispatchTouchEvent(motionEventDown);
-        webView.dispatchTouchEvent(motionEventUp);
+        webView.dispatchTouchEvent(down);
+        webView.dispatchTouchEvent(up);
 
-        motionEventDown.recycle();
-        motionEventUp.recycle();
+        down.recycle();
+        up.recycle();
     }
 
     // ===== Auto-hide cursor dengan fade =====
@@ -316,7 +333,8 @@ public class MainActivity extends AppCompatActivity {
         cursorHandler.removeCallbacks(hideCursorRunnable);
 
         cursor.animate().alpha(1f).setDuration(200).start();
-        cursor.setVisibility(View.VISIBLE);
+        cursor.setVisibility(ImageView.VISIBLE);
+        cursor.bringToFront(); // ⬅️ pastikan setiap muncul ada di atas
 
         cursorHandler.postDelayed(hideCursorRunnable, 3000);
     }
