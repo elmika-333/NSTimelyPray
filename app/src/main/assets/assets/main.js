@@ -1,3 +1,6 @@
+const BASE_ASSETS =
+  "file:///storage/emulated/0/Android/media/com.example.nstimelypray/assets"
+
 // ===== ELEMENT SETTING ADZAN =====
 const settingsPopup = document.getElementById("settings-popup")
 
@@ -454,7 +457,7 @@ const slide1 = document.getElementById("slide1")
 const slide2 = document.getElementById("slide2")
 const slideImages = Array.from(
   { length: 12 },
-  (_, i) => `assets/slideshow/${i + 1}.jpg`
+  (_, i) => `${BASE_ASSETS}/${i + 1}.jpg`
 )
 ;(function preloadImages(list) {
   list.forEach((src) => {
@@ -585,7 +588,7 @@ function onAdzanStart() {
 
   // buat elemen video
   videoAdzan = document.createElement("video")
-  videoAdzan.src = "assets/video/1.mp4"
+  videoAdzan.src = `${BASE_ASSETS}/1.mp4`
   videoAdzan.autoplay = true
   videoAdzan.loop = true
   videoAdzan.playsInline = true
