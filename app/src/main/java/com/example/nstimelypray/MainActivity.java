@@ -76,14 +76,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class DownloadAndUnzipTask extends AsyncTask<String, Integer, Boolean> {
+
+        private Dialog downloadDialog;
+        private ProgressBar progressBar;
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setMessage("Mengunduh & mengekstrak video/gambar...");
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progressDialog.setCancelable(false);
-            progressDialog.show();
+
+            // Buat custom dialog
+            downloadDialog = new Dialog(MainActivity.this);
+            downloadDialog.setContentView(R.layout.dialog_download);
+            downloadDialog.setCancelable(false);
+
+            // Set background sekeliling gelap
+            if (downloadDialog.getWindow() != null) {
+                downloadDialog.getWindow().setBackgroundDrawableResource(android.R.color.black);
+                downloadDialog.getWindow().setDimAmount(0.8f); // semi-transparent
+            }
+
+            progressBar = downloadDialog.findViewById(R.id.progress_bar);
+            downloadDialog.show();
         }
 
         @Override
@@ -129,12 +142,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-            if (progressDialog != null) progressDialog.setProgress(values[0]);
+            if (progressBar != null) progressBar.setProgress(values[0]);
         }
 
         @Override
         protected void onPostExecute(Boolean success) {
-            if (progressDialog != null) progressDialog.dismiss();
+            if (downloadDialog != null && downloadDialog.isShowing()) {
+                downloadDialog.dismiss();
+            }
             if (success) {
                 Toast.makeText(MainActivity.this, "Video/gambar siap!", Toast.LENGTH_SHORT).show();
             } else {

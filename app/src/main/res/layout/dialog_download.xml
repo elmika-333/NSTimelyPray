@@ -1,40 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
-    android:background="@android:color/transparent">
+    android:padding="30dp"
+    android:background="@android:color/white"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/text1"
+        android:text="Mengunduh &amp; mengekstrak video/gambar..."
+        android:textSize="18sp"
+        android:textColor="#000"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/text2"
+        android:text="Pastikan koneksi internet aktif dan stabil"
+        android:textSize="14sp"
+        android:textColor="#000"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/text3"
+        android:text="(Ini hanya untuk sekali, selanjutnya tidak butuh internet)"
+        android:textSize="12sp"
+        android:textColor="#555"
+        android:layout_marginTop="5dp"
+        android:gravity="center"/>
 
     <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="20dp"
-        android:max="100"
-        android:progress="0"
-        android:progressTint="@android:color/holo_blue_light"
-        android:indeterminate="false"
-        android:layout_marginBottom="16dp" />
-
-    <TextView
-        android:id="@+id/progressText"
-        android:layout_width="wrap_content"
+        android:id="@+id/progress_bar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:text="0%"
-        android:textSize="22sp"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
-        android:layout_marginBottom="12dp" />
-
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Mengunduh data video/gambar...\nPastikan perangkat terhubung ke internet stabil."
-        android:textSize="18sp"
-        android:gravity="center"
-        android:textColor="@android:color/darker_gray" />
-
+        android:layout_marginTop="15dp"/>
 </LinearLayout>
