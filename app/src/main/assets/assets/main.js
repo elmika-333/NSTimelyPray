@@ -826,3 +826,29 @@ function showToast(message, type = "error") {
     toast.classList.remove("show")
   }, 5000)
 }
+
+// gawe remot tv
+const inputs = document.querySelectorAll("input[type=number]")
+
+inputs.forEach((input) => {
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault() // cegah angka berubah
+      // fokus ke row sebelumnya
+      let prevRow = input.closest(".setting-row").previousElementSibling
+      if (prevRow) {
+        let focusable = prevRow.querySelector("button, input")
+        if (focusable) focusable.focus()
+      }
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault() // cegah angka berubah
+      // fokus ke row berikutnya
+      let nextRow = input.closest(".setting-row").nextElementSibling
+      if (nextRow) {
+        let focusable = nextRow.querySelector("button, input")
+        if (focusable) focusable.focus()
+      }
+    }
+  })
+})
