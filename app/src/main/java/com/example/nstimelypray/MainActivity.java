@@ -1,16 +1,22 @@
 package com.example.nstimelypray;
 
 import android.app.Dialog;
+import android.graphics.PointF;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
+import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,24 +39,61 @@ public class MainActivity extends AppCompatActivity {
     private boolean isDownloading = false;
     private File assetsDir;
 
+    // Cursor overlay
+    private ImageView cursor;
+    private PointF cursorPos = new PointF(500, 500); // posisi awal cursor
+    private final int CURSOR_STEP = 50; // jarak pindah per tombol D-pad
+
+    // Double-click tracking
+    private long lastClickTime = 0;
+    private final long DOUBLE_CLICK_THRESHOLD = 300; // ms
+
+    // Auto-hide cursor
+    private Handler cursorHandler = new Handler();
+    private Runnable hideCursorRunnable;
+
+    private FrameLayout rootLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        rootLayout = findViewById(R.id.rootLayout);
         webView = findViewById(R.id.webView);
 
-        // siapkan folder cache
+        // ===== buat cursor overlay =====
+        cursor = new ImageView(this);
+        cursor.setImageResource(R.drawable.ic_cursor); // icon cursor
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        cursor.setLayoutParams(lp);
+        cursor.setX(cursorPos.x);
+        cursor.setY(cursorPos.y);
+        rootLayout.addView(cursor);
+
+        // Setup hide cursor runnable
+        hideCursorRunnable = () -> {
+            cursor.animate().alpha(0f).setDuration(500).withEndAction(() -> {
+                cursor.setVisibility(View.INVISIBLE);
+            }).start();
+        };
+        resetCursorHideTimer();
+
+        // Folder cache
         assetsDir = new File(getCacheDir(), "nstimely_assets");
         if (!assetsDir.exists()) assetsDir.mkdirs();
 
-        // kalau sudah ada .completed → langsung load
         File completed = new File(assetsDir, ".completed");
         if (completed.exists()) {
             loadWebView();
         } else {
             showDownloadDialog();
-            new DownloadAndUnzipTask().execute("https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip");
+            new DownloadAndUnzipTask().execute(
+                "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip"
+            );
         }
     }
 
@@ -59,12 +102,8 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setAllowFileAccess(true);
-
-        // Supaya halaman render seperti di desktop
         webSettings.setUseWideViewPort(true);
         webSettings.setLoadWithOverviewMode(true);
-
-        // Zoom optional
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(false);
         webSettings.setDisplayZoomControls(false);
@@ -73,24 +112,17 @@ public class MainActivity extends AppCompatActivity {
             webSettings.setSafeBrowsingEnabled(true);
         }
 
-        // User-Agent Chrome Desktop (Windows)
         String desktopUA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
             "AppleWebKit/537.36 (KHTML, like Gecko) " +
             "Chrome/119.0.0.0 Safari/537.36";
         webSettings.setUserAgentString(desktopUA);
 
-        // Untuk TV: pastikan scale 100% (tidak auto zoom)
         webView.setInitialScale(100);
-
-        // Supaya JavaScript alert/confirm jalan normal
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient());
-
-        // Load index.html bawaan asset
         webView.loadUrl("file:///android_asset/index.html");
     }
-
 
     private void showDownloadDialog() {
         downloadDialog = new Dialog(this);
@@ -122,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
         protected Boolean doInBackground(String... urls) {
             File zipFile = new File(getCacheDir(), "assets.zip");
             try {
-                // === Step 1: Download zip ===
                 URL url = new URL(urls[0]);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.connect();
@@ -137,13 +168,12 @@ public class MainActivity extends AppCompatActivity {
                     fos.write(buffer, 0, len);
                     downloaded += len;
                     if (totalSize > 0) {
-                        publishProgress((int) ((downloaded / (float) totalSize) * 50)); // 0–50%
+                        publishProgress((int) ((downloaded / (float) totalSize) * 50));
                     }
                 }
                 fos.close();
                 input.close();
 
-                // === Step 2: Unzip (pakai ZipFile) ===
                 java.util.zip.ZipFile zip = new java.util.zip.ZipFile(zipFile);
                 int totalEntries = zip.size();
                 int filesExtracted = 0;
@@ -167,11 +197,10 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     filesExtracted++;
-                    publishProgress(50 + (int) ((filesExtracted / (float) totalEntries) * 50)); // 50–100%
+                    publishProgress(50 + (int) ((filesExtracted / (float) totalEntries) * 50));
                 }
                 zip.close();
 
-                // tandai selesai
                 new File(assetsDir, ".completed").createNewFile();
                 return true;
 
@@ -182,7 +211,6 @@ public class MainActivity extends AppCompatActivity {
                 zipFile.delete();
             }
         }
-
 
         @Override
         protected void onProgressUpdate(Integer... values) {
@@ -205,13 +233,91 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Tombol back → kembali halaman WebView
+    // ===== Tombol back + cursor =====
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK) && webView.canGoBack()) {
             webView.goBack();
             return true;
         }
+
+        boolean movedCursor = false;
+
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_UP:
+                cursorPos.y -= CURSOR_STEP;
+                movedCursor = true;
+                break;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                cursorPos.y += CURSOR_STEP;
+                movedCursor = true;
+                break;
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                cursorPos.x -= CURSOR_STEP;
+                movedCursor = true;
+                break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                cursorPos.x += CURSOR_STEP;
+                movedCursor = true;
+                break;
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_BUTTON_A:
+                handleClick();
+                movedCursor = true;
+                break;
+        }
+
+        if (movedCursor) {
+            // batas agar tidak keluar layar
+            cursorPos.x = Math.max(0, Math.min(cursorPos.x, rootLayout.getWidth() - cursor.getWidth()));
+            cursorPos.y = Math.max(0, Math.min(cursorPos.y, rootLayout.getHeight() - cursor.getHeight()));
+
+            cursor.setX(cursorPos.x);
+            cursor.setY(cursorPos.y);
+            cursor.setVisibility(View.VISIBLE);
+            resetCursorHideTimer();
+            return true; // <- biar tidak tembus ke WebView
+        }
+
         return super.onKeyDown(keyCode, event);
+    }
+
+    // ===== Klik + double-click =====
+    private void handleClick() {
+        long now = SystemClock.uptimeMillis();
+        if (now - lastClickTime <= DOUBLE_CLICK_THRESHOLD) {
+            performClickAtCursor();
+            performClickAtCursor();
+        } else {
+            performClickAtCursor();
+        }
+        lastClickTime = now;
+    }
+
+    private void performClickAtCursor() {
+        float x = cursorPos.x + cursor.getWidth() / 2f;
+        float y = cursorPos.y + cursor.getHeight() / 2f;
+
+        long downTime = SystemClock.uptimeMillis();
+        MotionEvent motionEventDown = MotionEvent.obtain(downTime, downTime,
+                MotionEvent.ACTION_DOWN, x, y, 0);
+        MotionEvent motionEventUp = MotionEvent.obtain(downTime, downTime + 100,
+                MotionEvent.ACTION_UP, x, y, 0);
+
+        webView.dispatchTouchEvent(motionEventDown);
+        webView.dispatchTouchEvent(motionEventUp);
+
+        motionEventDown.recycle();
+        motionEventUp.recycle();
+    }
+
+    // ===== Auto-hide cursor dengan fade =====
+    private void resetCursorHideTimer() {
+        cursorHandler.removeCallbacks(hideCursorRunnable);
+
+        cursor.animate().alpha(1f).setDuration(200).start();
+        cursor.setVisibility(View.VISIBLE);
+
+        cursorHandler.postDelayed(hideCursorRunnable, 3000);
     }
 }
