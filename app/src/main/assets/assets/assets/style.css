@@ -1,0 +1,671 @@
+/* ===============================
+   Root Variables & Reset
+=================================*/
+:root {
+  --blue: #163a62;
+  --peach: #fbe4d4;
+  --dark: #06101c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===============================
+   Fonts
+=================================*/
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Poppins";
+  src: url("fonts/Poppins-Bold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+/* ===============================
+   Global Body
+=================================*/
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+  color: var(--blue);
+  background: url("../assets/gambar/Background.jpg") center/cover no-repeat;
+  position: relative;
+}
+
+/* ===============================
+   TOP BAR
+=================================*/
+.topbar {
+  position: absolute;
+  inset: 0 0 auto 0; /* top:0, left:0, right:0 */
+  height: 19vh;
+  background: url(../assets/gambar/bg_top_06101C_opacity-45.png) center/cover
+    no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2%;
+  color: #fff;
+  z-index: 9;
+}
+
+/* Tanggal (Masehi + Hijri) */
+.tgl {
+  display: flex;
+  flex-direction: column;
+  line-height: 5vh;
+  font-weight: 600;
+  font-size: 1.2vw;
+  letter-spacing: 0.1vw;
+  text-transform: uppercase;
+}
+.tgl .hijri {
+  font-weight: 400;
+  font-size: 2vw;
+  opacity: 0.95;
+}
+
+/* Logo & Nama Masjid */
+.brand {
+  touch-action: manipulation; /* mencegah double tap zoom dan scroll delay */
+  -ms-touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+}
+.brand img {
+  width: 7vw;
+}
+.brand .title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+.brand .title .name {
+  font-size: 4vw;
+  font-weight: 800;
+  letter-spacing: 0.1vw;
+}
+.brand .title .addr {
+  font-size: 1.5vw;
+  font-weight: 400;
+  opacity: 0.95;
+  margin-top: 2%;
+  letter-spacing: 0.1vw;
+}
+
+/* Jam Digital */
+.clock {
+  font-weight: 800;
+  font-size: 6vw;
+  letter-spacing: 0.1vw;
+  text-align: right;
+}
+
+/* ===============================
+   COUNTDOWN PILL
+=================================*/
+.countdown {
+  position: absolute;
+  top: 60%;
+  left: 1%;
+  width: 36%;
+  height: 10%;
+  background: url(../assets/gambar/Rectangle_countdownpng.png) center / contain
+    no-repeat;
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+  padding: 0 1.2%;
+  color: #fff;
+  font-weight: 800;
+  font-size: 2.5vw;
+}
+
+/* Icon countdown */
+.c-icon {
+  width: 50%;
+  height: 50%;
+  border-radius: 100%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  flex: 0 0 8%;
+}
+.c-icon svg {
+  width: 50%;
+  height: 50%;
+  fill: var(--blue);
+  animation: pulse 1s infinite;
+}
+
+.c-label {
+  letter-spacing: 0.1vw;
+}
+.c-sep {
+  opacity: 0.9;
+  margin: 0 2%;
+}
+.c-time {
+  font-size: 2.5vw;
+  letter-spacing: 0.1vw;
+}
+
+/* ===============================
+   PRAYER BOXES
+=================================*/
+.row {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 10.5vh;
+  display: flex;
+  gap: 1%;
+}
+.box {
+  width: 14vw;
+  height: 17vh;
+  background: url(../assets/gambar/Rectangle_jam.png) center / cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue);
+  text-align: center;
+  border-radius: 10%;
+  filter: drop-shadow(0 1vw 1vw rgba(0, 0, 0, 0.25));
+  -webkit-filter: drop-shadow(0 1vw 1vw rgba(0, 0, 0, 0.25));
+}
+
+/* Highlight box aktif (waktu sholat sekarang) */
+.box.active {
+  background: var(--blue);
+  color: #fff;
+  border-radius: 10%;
+  -webkit-border-radius: 10%;
+  -moz-border-radius: 10%;
+  -ms-border-radius: 10%;
+  -o-border-radius: 10%;
+}
+
+.box .label {
+  font-size: 2vw;
+  font-weight: 600;
+  letter-spacing: 0.1vw;
+  margin-bottom: 1%;
+}
+.box .time {
+  font-size: 3vw;
+  font-weight: 800;
+  letter-spacing: 0.1vw;
+}
+
+/* ===============================
+   RUNNING TEXT (Marquee)
+=================================*/
+.rt {
+  width: 100vw;
+  height: 6vh;
+  background: #04101c;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: scroll 20s linear infinite;
+  -webkit-animation: scroll 20s linear infinite;
+}
+
+.marquee span {
+  width: 100vw;
+  font-size: 2vw;
+  font-weight: 400;
+  color: #ffffff;
+  padding-right: 6%;
+}
+
+/* Animasi scroll seamless */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.rt,
+.marquee,
+.marquee span {
+  outline: none;
+}
+
+/* ===============================
+   POPUP (Modal Sync / Info)
+=================================*/
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+.overlay.hidden {
+  display: none;
+}
+
+.modal {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+.modal h2 {
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  color: #333;
+}
+.modal p.notice {
+  font-size: 0.85rem;
+  color: #d63031;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+/* Progress bar */
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #eee;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+.progress-bar #progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #00b894, #0984e3);
+  transition: width 0.3s ease;
+}
+#progress-text {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* Tombol dalam modal */
+.modal button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background: #0984e3;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin: 0.3rem;
+  transition: 0.2s;
+}
+.modal button:hover {
+  background: #74b9ff;
+}
+#start-sync-btn {
+  background: #00b894;
+}
+#start-sync-btn:hover {
+  background: #55efc4;
+}
+#retry-btn {
+  background: #d63031;
+}
+#retry-btn:hover {
+  background: #ff7675;
+}
+
+/* FadeIn modal */
+@keyframes fadeIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ===============================
+   ANIMATIONS
+=================================*/
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  } /* membesar di tengah */
+}
+
+/* ===============================
+   POPUP ADZAN (slideshow background)
+=================================*/
+#adzan-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+}
+#adzan-popup.hidden {
+  display: none;
+}
+
+#adzan-popup * {
+  pointer-events: auto; /* tapi anak-anak popup tetap bisa diinteraksi */
+}
+/* Slideshow wrapper */
+.slideshow-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Layer slideshow untuk crossfade */
+.slideshow-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(1);
+  transition: opacity 1.2s ease-in-out, transform 8s ease-in-out;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+.slideshow-img.active {
+  opacity: 1;
+  transform: scale(1.05); /* zoom pelan agar terasa hidup */
+}
+
+/* Shade di atas slideshow */
+.slideshow-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2));
+  z-index: 1;
+}
+
+/* Konten popup */
+.popup-content {
+  width: 56%;
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #fff;
+  margin-top: 6%;
+}
+
+/* Animasi teks popup */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popup-text {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 5%;
+  animation: slideUp 0.8s ease both;
+  letter-spacing: 4px;
+}
+.popup-timer {
+  display: flex;
+  background-color: #e57b1c;
+  height: 11vh;
+  font-weight: 600;
+  font-size: 5vw;
+  color: #ffffff;
+  animation: slideDown 0.8s ease both;
+  animation-delay: 0.2s;
+  border-radius: 1vw;
+  justify-content: center;
+  align-items: center;
+  gap: 4%;
+}
+
+.c-iconpopup svg {
+  width: 5vw;
+  fill: #ffffff;
+  margin-top: 3.5vh;
+}
+
+#c-timepopup {
+  width: 18vw;
+  font-size: 5vw;
+}
+
+.adzan-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 20; /* pastikan lebih tinggi daripada slideshow */
+}
+
+/* Overlay */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 45%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(6px);
+}
+
+/* Modal */
+.settings-modal {
+  background: #06101c;
+  color: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 50vw;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-modal h2 {
+  text-align: center;
+  margin-bottom: 2vh;
+}
+
+/* Baris setting */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.setting-row label {
+  flex: 1;
+  font-size: 1rem;
+}
+
+/* ===== Toggle Button Modern ===== */
+/* Toggle Modern 3D/Timblul */
+.toggle-btn {
+  position: relative;
+  display: inline-block;
+  width: 3.75em;
+  height: 2.125em;
+  background-color: #ccc;
+  border-radius: 2.125em;
+  cursor: pointer;
+  border: unset;
+  /*Shadowmembuatefektimbul*/
+  box-shadow: inset 0 -0.15em 0.25em rgba(0, 0, 0, 0.25),
+    /* bayangan bawah */ inset 0 0.1em 0.15em rgba(255, 255, 255, 0.6);
+  /*highlightatas*/
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  -webkit-transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  -moz-transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  -ms-transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  -o-transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Bulatan */
+.toggle-btn::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.125em;
+  width: 1.875em;
+  height: 1.875em;
+  background-color: #fff;
+  border-radius: 50%;
+
+  /* Shadow untuk kesan timbul */
+  box-shadow: 0 0.15em 0.25em rgba(0, 0, 0, 0.4),
+    0 -0.05em 0.05em rgba(255, 255, 255, 0.5);
+  transform: translateY(-50%);
+  transition: left 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Toggle aktif */
+.toggle-btn.active {
+  background-color: #4ade80;
+  box-shadow: inset 0 -0.15em 0.25em rgba(0, 0, 0, 0.3),
+    inset 0 0.1em 0.15em rgba(255, 255, 255, 0.5);
+}
+
+.toggle-btn.active::before {
+  left: calc(100% - 1.875em - 0.125em);
+  box-shadow: 0 0.15em 0.25em rgba(0, 0, 0, 0.45),
+    0 -0.05em 0.05em rgba(255, 255, 255, 0.55);
+}
+
+/* Hove*
+
+/* Input number */
+.setting-row input[type="number"] {
+  width: 6rem;
+  padding: 0.3rem;
+  border-radius: 0.5rem;
+  border: none;
+  text-align: center;
+}
+
+/* Tombol simpan/keluar */
+.btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+.btn.primary {
+  background: #4caf50;
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: #45a049;
+}
+
+.btn.secondary {
+  background: #555;
+  color: #fff;
+}
+
+.btn.secondary:hover {
+  background: #444;
+}
+
+/* Hidden */
+.hidden {
+  display: none;
+}
+
+#pre-adzan-time {
+  margin-bottom: 6vh;
+}
+
+.bold {
+  font-weight: 700;
+}
+
+.toast {
+  position: fixed;
+  bottom: -80px; /* awalnya tersembunyi */
+  left: 0;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  background-color: #28a745; /* hijau default */
+  transition: bottom 0.5s ease;
+  z-index: 99999; /* pastikan di atas popup */
+}
+.toast.show {
+  bottom: 0;
+}
