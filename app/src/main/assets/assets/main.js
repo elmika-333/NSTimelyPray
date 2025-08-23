@@ -79,12 +79,45 @@ function loadSettingsToPopup() {
 }
 
 // ===== Event buka popup =====
+// Function untuk membuka popup
+function openSettingsPopup() {
+  loadSettingsToPopup()
+  settingsPopup.classList.remove("hidden")
+}
+
+// ----- PC: double click di .topbar -----
 document.querySelectorAll(".topbar, #adzan-popup .topbar").forEach((el) => {
   el.addEventListener("dblclick", (e) => {
     e.preventDefault()
-    loadSettingsToPopup()
-    settingsPopup.classList.remove("hidden")
+    openSettingsPopup()
   })
+
+  // Optional: double Enter di PC keyboard
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const now = Date.now()
+      if (!el.lastEnterTime) el.lastEnterTime = 0
+      if (now - el.lastEnterTime < 500) {
+        e.preventDefault()
+        openSettingsPopup()
+      }
+      el.lastEnterTime = now
+    }
+  })
+})
+
+// ----- Android TV: double Enter / OK di remote di mana saja -----
+let lastEnterTimeTV = 0
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const now = Date.now()
+    if (now - lastEnterTimeTV < 500) {
+      // threshold double Enter
+      e.preventDefault()
+      openSettingsPopup()
+    }
+    lastEnterTimeTV = now
+  }
 })
 
 // ===== Toggle utama =====
