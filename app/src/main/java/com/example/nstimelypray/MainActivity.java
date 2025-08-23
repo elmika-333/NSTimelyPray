@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     // Link ZIP video/gambar GitHub Releases
     private final String ZIP_URL = "https://github.com/elmika-333/nstimelypray-assets/releases/download/v1.0/videodangambar.zip";
 
+    private File markerFile;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,9 +49,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webview);
 
-        // WebView harus bisa fokus agar keydown remote masuk 
-        webView.setFocusable(true); 
-        webView.setFocusableInTouchMode(true); 
+        // WebView harus bisa fokus agar keydown remote masuk
+        webView.setFocusable(true);
+        webView.setFocusableInTouchMode(true);
         webView.requestFocus();
 
         // WebView settings
@@ -75,14 +77,20 @@ public class MainActivity extends AppCompatActivity {
         assetsDir = new File(getExternalMediaDirs()[0], "assets");
         if (!assetsDir.exists()) assetsDir.mkdirs();
 
+        // Marker file untuk cek apakah download sudah selesai
+        markerFile = new File(assetsDir, ".done");
+
         // Siapkan custom dialog download
         setupDownloadDialog();
 
-        // Mulai unduh & unzip video/gambar (ZIP)
-        new DownloadAndUnzipTask().execute(ZIP_URL);
-
-        // Load index.html dari APK assets
-        loadOfflineHTML();
+        // Cek marker
+        if (markerFile.exists()) {
+            // Sudah selesai download sebelumnya → langsung load
+            loadOfflineHTML();
+        } else {
+            // Belum ada → mulai download
+            new DownloadAndUnzipTask().execute(ZIP_URL);
+        }
     }
 
     private void setupDownloadDialog() {
@@ -142,6 +150,10 @@ public class MainActivity extends AppCompatActivity {
                     zipInput.closeEntry();
                 }
                 zipInput.close();
+
+                // bikin marker kalau sukses
+                markerFile.createNewFile();
+
                 return true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -162,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
             downloadDialog.dismiss();
             if (success) {
                 Toast.makeText(MainActivity.this, "Video/gambar siap!", Toast.LENGTH_SHORT).show();
+                loadOfflineHTML();
             } else {
                 Toast.makeText(MainActivity.this, "Gagal download video/gambar.", Toast.LENGTH_LONG).show();
             }
